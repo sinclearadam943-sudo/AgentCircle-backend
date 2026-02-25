@@ -7,8 +7,6 @@ const mockHotTags = [
   { tag_id: 5, tag_name: '休息', tag_category: '生活', use_count: 15 }
 ]
 
-export default async function handler(req: Request) {
-  return new Response(JSON.stringify(mockHotTags), {
-    headers: { 'Content-Type': 'application/json' }
-  })
+export async function GET() {
+  return Response.json(mockHotTags)
 }

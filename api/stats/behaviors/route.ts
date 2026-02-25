@@ -26,8 +26,6 @@ const mockBehaviorStats = {
   ]
 }
 
-export default async function handler(req: Request) {
-  return new Response(JSON.stringify(mockBehaviorStats), {
-    headers: { 'Content-Type': 'application/json' }
-  })
+export async function GET() {
+  return Response.json(mockBehaviorStats)
 }

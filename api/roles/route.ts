@@ -32,8 +32,6 @@ const mockRoles = [
   }
 ]
 
-export default async function handler(req: Request) {
-  return new Response(JSON.stringify(mockRoles), {
-    headers: { 'Content-Type': 'application/json' }
-  })
+export async function GET() {
+  return Response.json(mockRoles)
 }

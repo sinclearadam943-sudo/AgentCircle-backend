@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Users, Zap, Brain, Calendar, TrendingUp, Activity, X, Clock, User } from 'lucide-react'
-import axios from 'axios'
+import { mockStats, mockBehaviorStats, mockRoleStats, mockHotTags } from '../mockData'
 
 // 添加全局动画样式
 if (typeof document !== 'undefined') {
@@ -73,19 +73,13 @@ const OverviewPage: React.FC = () => {
 
   const fetchData = async () => {
     try {
-      const [statsRes, behaviorStatsRes, roleStatsRes, hotTagsRes] = await Promise.all([
-        axios.get('/api/stats'),
-        axios.get('/api/stats/behaviors'),
-        axios.get('/api/stats/roles'),
-        axios.get('/api/tags/hot')
-      ])
-
-      setStats(statsRes.data)
-      setBehaviorStats(behaviorStatsRes.data)
-      setRoleStats(roleStatsRes.data)
+      // 使用模拟数据
+      setStats(mockStats)
+      setBehaviorStats(mockBehaviorStats)
+      setRoleStats(mockRoleStats)
       
       // 按使用次数从高到低排序
-      const sortedHotTags = [...hotTagsRes.data].sort((a: any, b: any) => b.use_count - a.use_count)
+      const sortedHotTags = [...mockHotTags].sort((a: any, b: any) => b.use_count - a.use_count)
       setHotTags(sortedHotTags)
     } catch (error) {
       console.error('获取数据失败:', error)

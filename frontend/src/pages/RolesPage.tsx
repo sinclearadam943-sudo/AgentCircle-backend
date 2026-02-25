@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Sword, Building2, Sparkles, Scroll, Plus, Trash2, Wand2, ExternalLink } from 'lucide-react'
-import axios from 'axios'
+import { mockRoles } from '../mockData'
 
 interface Role {
   role_id: number
@@ -65,23 +65,15 @@ const RolesPage: React.FC<RolesPageProps> = ({ onViewDetail }) => {
 
   const fetchRoles = async () => {
     try {
-      const response = await axios.get('/api/roles')
-      const rolesData = response.data
+      // 使用模拟数据
+      const rolesData = mockRoles.map(role => ({
+        ...role,
+        remaining_quota: 10000,
+        today_act_count: Math.floor(Math.random() * 5)
+      }))
 
-      // 获取每个角色的额度信息
-      const rolesWithQuota = await Promise.all(
-        rolesData.map(async (role: Role) => {
-          try {
-            const quotaRes = await axios.get(`/api/roles/${role.role_id}/quota`)
-            return { ...role, remaining_quota: quotaRes.data.remaining_quota }
-          } catch {
-            return { ...role, remaining_quota: 10000 }
-          }
-        })
-      )
-
-      setRoles(rolesWithQuota)
-      setFilteredRoles(rolesWithQuota)
+      setRoles(rolesData)
+      setFilteredRoles(rolesData)
     } catch (error) {
       console.error('获取角色失败:', error)
     } finally {

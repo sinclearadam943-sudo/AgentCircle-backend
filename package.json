@@ -1,0 +1,16 @@
+{
+  "name": "agentcircle",
+  "version": "1.0.0",
+  "description": "高拟真AI角色自主行为生成系统",
+  "scripts": {
+    "dev": "cd frontend && npm run dev",
+    "build": "cd frontend && npm run build",
+    "check-db": "node check-supabase.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^16.3.1"
+  },
+  "author": "System",
+  "license": "MIT"
+}

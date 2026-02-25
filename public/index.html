@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高拟真AI角色自主行为生成系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            text-align: center;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            margin-bottom: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            font-size: 36px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+        }
+        
+        .roles-section {
+            margin-bottom: 40px;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #667eea;
+            border-radius: 20px;
+            background: transparent;
+            color: #667eea;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .filter-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        
+        .role-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease;
+        }
+        
+        .role-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .role-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .role-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            margin-right: 15px;
+        }
+        
+        .role-info h3 {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .role-identity {
+            font-size: 14px;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .role-camp {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .role-personality {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.4;
+            margin-bottom: 15px;
+        }
+        
+        .role-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            flex: 1;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .behaviors-section {
+            margin-bottom: 40px;
+        }
+        
+        .behaviors-list {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        }
+        
+        .behavior-item {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .behavior-item:last-child {
+            border-bottom: none;
+        }
+        
+        .behavior-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .behavior-role {
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .behavior-time {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .behavior-content {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.4;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            color: #666;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .roles-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                padding: 40px 20px;
+            }
+            
+            h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>高拟真AI角色自主行为生成系统</h1>
+            <p class="subtitle">第一阶段 - 基础框架</p>
+            
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalRoles">0</div>
+                    <div class="stat-label">角色总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalBehaviors">0</div>
+                    <div class="stat-label">行为总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalMemories">0</div>
+                    <div class="stat-label">记忆总数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="todayBehaviors">0</div>
+                    <div class="stat-label">今日行为</div>
+                </div>
+            </div>
+        </header>
+
+        <section class="roles-section">
+            <h2 class="section-title">角色列表</h2>
+            
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-camp="all">全部</button>
+                <button class="filter-btn" data-camp="历史">历史</button>
+                <button class="filter-btn" data-camp="古风江湖">古风江湖</button>
+                <button class="filter-btn" data-camp="现代都市">现代都市</button>
+                <button class="filter-btn" data-camp="奇幻世界">奇幻世界</button>
+            </div>
+            
+            <div class="roles-grid" id="rolesGrid">
+                <!-- 角色卡片将通过JavaScript动态生成 -->
+            </div>
+        </section>
+
+        <section class="behaviors-section">
+            <h2 class="section-title">最新行为</h2>
+            
+            <div class="behaviors-list" id="behaviorsList">
+                <!-- 行为列表将通过JavaScript动态生成 -->
+            </div>
+        </section>
+
+        <footer>
+            <p>高拟真AI角色自主行为生成系统 · 第一阶段</p>
+            <p>© 2026 系统自动生成</p>
+        </footer>
+    </div>
+
+    <script>
+        // API 基础URL
+        const API_BASE = 'http://localhost:8001/api';
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadRoles();
+            loadBehaviors();
+            setupEventListeners();
+        });
+
+        // 加载统计信息
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const data = await response.json();
+                
+                document.getElementById('totalRoles').textContent = data.total_roles;
+                document.getElementById('totalBehaviors').textContent = data.total_behaviors;
+                document.getElementById('totalMemories').textContent = data.total_memories;
+                document.getElementById('todayBehaviors').textContent = data.today_behaviors;
+            } catch (error) {
+                console.error('加载统计信息失败:', error);
+            }
+        }
+
+        // 加载角色列表
+        async function loadRoles(camp = 'all') {
+            try {
+                let url = `${API_BASE}/roles`;
+                if (camp !== 'all') {
+                    url += `?camp=${encodeURIComponent(camp)}`;
+                }
+                
+                const response = await fetch(url);
+                const roles = await response.json();
+                
+                renderRoles(roles);
+            } catch (error) {
+                console.error('加载角色失败:', error);
+            }
+        }
+
+        // 渲染角色列表
+        function renderRoles(roles) {
+            const container = document.getElementById('rolesGrid');
+            container.innerHTML = '';
+            
+            roles.forEach(role => {
+                const card = document.createElement('div');
+                card.className = 'role-card';
+                
+                card.innerHTML = `
+                    <div class="role-header">
+                        <div class="role-avatar">${role.role_name[0]}</div>
+                        <div class="role-info">
+                            <h3>${role.role_name}</h3>
+                            <div class="role-identity">${role.role_identity}</div>
+                            <div class="role-camp">${role.role_camp}</div>
+                        </div>
+                    </div>
+                    <div class="role-personality">${role.role_personality.substring(0, 80)}...</div>
+                    <div class="role-actions">
+                        <button class="btn btn-primary" onclick="generateBehaviors(${role.role_id})")">生成行为</button>
+                        <button class="btn btn-secondary" onclick="generateTimeline(${role.role_id})")">时间线</button>
+                    </div>
+                `;
+                
+                container.appendChild(card);
+            });
+        }
+
+        // 加载最新行为
+        async function loadBehaviors() {
+            try {
+                const response = await fetch(`${API_BASE}/behaviors`);
+                const behaviors = await response.json();
+                
+                renderBehaviors(behaviors.slice(0, 10)); // 只显示最新的10个行为
+            } catch (error) {
+                console.error('加载行为失败:', error);
+            }
+        }
+
+        // 渲染行为列表
+        function renderBehaviors(behaviors) {
+            const container = document.getElementById('behaviorsList');
+            container.innerHTML = '';
+            
+            if (behaviors.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">暂无行为记录</p>';
+                return;
+            }
+            
+            behaviors.forEach(behavior => {
+                const item = document.createElement('div');
+                item.className = 'behavior-item';
+                
+                const time = new Date(behavior.act_time).toLocaleString('zh-CN');
+                
+                item.innerHTML = `
+                    <div class="behavior-header">
+                        <div class="behavior-role">角色 ${behavior.role_id}</div>
+                        <div class="behavior-time">${time}</div>
+                    </div>
+                    <div class="behavior-content">
+                        <strong>${behavior.act_tag}</strong>: ${behavior.act_type === 'self_act' ? '自主行为' : '交互行为'}
+                    </div>
+                `;
+                
+                container.appendChild(item);
+            });
+        }
+
+        // 生成角色行为
+        async function generateBehaviors(roleId) {
+            try {
+                const response = await fetch(`${API_BASE}/behaviors/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ role_id: roleId })
+                });
+                
+                const result = await response.json();
+                alert(result.message);
+                
+                // 刷新数据
+                loadStats();
+                loadBehaviors();
+            } catch (error) {
+                console.error('生成行为失败:', error);
+                alert('生成行为失败，请稍后重试');
+            }
+        }
+
+        // 生成角色时间线
+        async function generateTimeline(roleId) {
+            try {
+                const response = await fetch(`${API_BASE}/timeline/generate`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ role_id: roleId })
+                });
+                
+                const result = await response.json();
+                
+                if (result.filepath) {
+                    // 构建时间线文件的访问URL
+                    const filename = result.filepath.split('\\').pop();
+                    const timelineUrl = `http://localhost:8000/timelines/${encodeURIComponent(filename)}`;
+                    window.open(timelineUrl, '_blank');
+                } else {
+                    alert('生成时间线失败: ' + result.message);
+                }
+            } catch (error) {
+                console.error('生成时间线失败:', error);
+                alert('生成时间线失败，请稍后重试');
+            }
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 筛选按钮点击事件
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // 移除所有按钮的active类
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    // 添加当前按钮的active类
+                    this.classList.add('active');
+                    // 加载对应阵营的角色
+                    loadRoles(this.dataset.camp);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

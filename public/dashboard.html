@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI角色自主行为生成系统 - 暖色大屏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #fff8f0 0%, #ffe8d6 50%, #ffd4a3 100%);
+            min-height: 100vh;
+            color: #5d4037;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+
+        /* 头部 */
+        .header {
+            text-align: center;
+            padding: 50px 30px;
+            background: linear-gradient(135deg, #ff9a56 0%, #ff6b35 100%);
+            border-radius: 25px;
+            margin-bottom: 40px;
+            box-shadow: 0 15px 50px rgba(255, 107, 53, 0.3);
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 42px;
+            margin-bottom: 15px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header .subtitle {
+            font-size: 20px;
+            opacity: 0.95;
+            margin-bottom: 10px;
+        }
+
+        .header .version {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 35px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(255, 154, 86, 0.15);
+            border: 1px solid rgba(255, 154, 86, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(255, 154, 86, 0.25);
+        }
+
+        .stat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 28px;
+        }
+
+        .stat-icon.blue {
+            background: linear-gradient(135deg, #64b5f6, #1976d2);
+            color: white;
+        }
+
+        .stat-icon.purple {
+            background: linear-gradient(135deg, #ba68c8, #7b1fa2);
+            color: white;
+        }
+
+        .stat-icon.green {
+            background: linear-gradient(135deg, #81c784, #388e3c);
+            color: white;
+        }
+
+        .stat-icon.orange {
+            background: linear-gradient(135deg, #ffb74d, #f57c00);
+            color: white;
+        }
+
+        .stat-value {
+            font-size: 42px;
+            font-weight: bold;
+            color: #ff6b35;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 16px;
+            color: #8d6e63;
+        }
+
+        /* 图表区域 */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .chart-card {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(255, 154, 86, 0.15);
+            border: 1px solid rgba(255, 154, 86, 0.2);
+        }
+
+        .chart-title {
+            font-size: 20px;
+            font-weight: bold;
+            color: #5d4037;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-title .icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #ff9a56, #ff6b35);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 18px;
+        }
+
+        /* 行为类型分布 */
+        .type-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .type-bar-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .type-bar-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 15px;
+            color: #5d4037;
+        }
+
+        .type-bar-bg {
+            height: 12px;
+            background: #f5f5f5;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .type-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 0.5s ease;
+        }
+
+        .type-bar-fill.self {
+            background: linear-gradient(90deg, #ff9a56, #ff6b35);
+        }
+
+        .type-bar-fill.dialog {
+            background: linear-gradient(90deg, #81c784, #388e3c);
+        }
+
+        /* 阵营分布 */
+        .camp-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .camp-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            background: linear-gradient(135deg, #fff8f0, #ffe8d6);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 154, 86, 0.2);
+        }
+
+        .camp-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+        }
+
+        .camp-icon.ancient {
+            background: linear-gradient(135deg, #ff9a56, #ff6b35);
+        }
+
+        .camp-icon.modern {
+            background: linear-gradient(135deg, #64b5f6, #1976d2);
+        }
+
+        .camp-icon.fantasy {
+            background: linear-gradient(135deg, #ba68c8, #7b1fa2);
+        }
+
+        .camp-icon.history {
+            background: linear-gradient(135deg, #81c784, #388e3c);
+        }
+
+        .camp-info {
+            flex: 1;
+        }
+
+        .camp-name {
+            font-weight: 600;
+            color: #5d4037;
+            font-size: 15px;
+        }
+
+        .camp-count {
+            font-size: 13px;
+            color: #8d6e63;
+            margin-top: 3px;
+        }
+
+        /* 趋势图表 */
+        .trend-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 150px;
+            padding: 20px 0;
+        }
+
+        .trend-bar-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .trend-bar-container {
+            width: 30px;
+            height: 100px;
+            background: #f5f5f5;
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .trend-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, #ff9a56, #ff6b35);
+            border-radius: 8px;
+            transition: height 0.5s ease;
+        }
+
+        .trend-date {
+            font-size: 12px;
+            color: #8d6e63;
+        }
+
+        .trend-value {
+            font-size: 12px;
+            font-weight: 600;
+            color: #ff6b35;
+        }
+
+        /* 角色列表 */
+        .roles-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #5d4037;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title .icon {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff9a56, #ff6b35);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .camp-filter {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border: 2px solid #ff9a56;
+            background: transparent;
+            color: #ff6b35;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: linear-gradient(135deg, #ff9a56, #ff6b35);
+            color: white;
+            border-color: transparent;
+        }
+
+        .roles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        .role-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 30px rgba(255, 154, 86, 0.15);
+            border: 1px solid rgba(255, 154, 86, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+
+        .role-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(255, 154, 86, 0.25);
+        }
+
+        .role-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .role-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff9a56, #ff6b35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .role-info h3 {
+            font-size: 20px;
+            color: #5d4037;
+            margin-bottom: 5px;
+        }
+
+        .role-identity {
+            font-size: 14px;
+            color: #ff6b35;
+            font-weight: 500;
+        }
+
+        .role-camp {
+            display: inline-block;
+            background: linear-gradient(135deg, #fff8f0, #ffe8d6);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 12px;
+            color: #8d6e63;
+            margin-top: 5px;
+        }
+
+        .role-personality {
+            font-size: 14px;
+            color: #6d4c41;
+            line-height: 1.5;
+            margin-bottom: 15px;
+        }
+
+        .role-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 154, 86, 0.2);
+        }
+
+        .role-limit {
+            font-size: 13px;
+            color: #8d6e63;
+        }
+
+        .view-timeline {
+            font-size: 13px;
+            color: #ff6b35;
+            font-weight: 600;
+        }
+
+        /* 底部 */
+        .footer {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            color: #8d6e63;
+        }
+
+        .footer p {
+            margin-bottom: 10px;
+        }
+
+        /* 响应式 */
+        @media (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            .header h1 {
+                font-size: 32px;
+            }
+            .container {
+                padding: 20px;
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid #ffe8d6;
+            border-top-color: #ff6b35;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <h1>🎭 AI角色自主行为生成系统</h1>
+            <p class="subtitle">第一阶段 · 基础框架</p>
+            <span class="version">v1.0.0</span>
+        </header>
+
+        <!-- 统计卡片 -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="loading"><div class="loading-spinner"></div></div>
+        </div>
+
+        <!-- 图表区域 -->
+        <div class="charts-grid" id="chartsGrid">
+            <div class="loading"><div class="loading-spinner"></div></div>
+        </div>
+
+        <!-- 角色列表 -->
+        <section class="roles-section">
+            <h2 class="section-title">
+                <span class="icon">👥</span>
+                角色列表
+            </h2>
+            
+            <div class="camp-filter" id="campFilter">
+                <button class="filter-btn active" data-camp="all">全部</button>
+                <button class="filter-btn" data-camp="历史">历史</button>
+                <button class="filter-btn" data-camp="古风江湖">古风江湖</button>
+                <button class="filter-btn" data-camp="现代都市">现代都市</button>
+                <button class="filter-btn" data-camp="奇幻世界">奇幻世界</button>
+            </div>
+            
+            <div class="roles-grid" id="rolesGrid">
+                <div class="loading"><div class="loading-spinner"></div></div>
+            </div>
+        </section>
+
+        <!-- 调试按钮 -->
+        <div style="text-align:center; padding: 20px;">
+            <button onclick="testAPI()" style="padding: 10px 20px; background: #ff6b35; color: white; border: none; border-radius: 8px; cursor: pointer;">测试API连接</button>
+            <div id="debugInfo" style="margin-top: 10px; color: #666; font-size: 12px;"></div>
+        </div>
+
+        <!-- 底部 -->
+        <footer class="footer">
+            <p>高拟真AI角色自主行为生成系统 · 第一阶段</p>
+            <p>© 2026 AI Character System</p>
+        </footer>
+    </div>
+
+    <script>
+        // API 基础URL
+        const API_BASE = 'http://localhost:8002/api';
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadCharts();
+            loadRoles();
+            setupEventListeners();
+        });
+
+        // 加载统计信息
+        async function loadStats() {
+            const statsGrid = document.getElementById('statsGrid');
+            try {
+                console.log('正在加载统计信息...');
+                const response = await fetch(`${API_BASE}/stats`);
+                console.log('响应状态:', response.status);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                console.log('获取到的数据:', data);
+                
+                statsGrid.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-icon blue">👥</div>
+                        <div class="stat-value">${data.total_roles || 0}</div>
+                        <div class="stat-label">角色总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple">⚡</div>
+                        <div class="stat-value">${data.total_behaviors || 0}</div>
+                        <div class="stat-label">行为总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">🧠</div>
+                        <div class="stat-value">${data.total_memories || 0}</div>
+                        <div class="stat-label">记忆总数</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">📅</div>
+                        <div class="stat-value">${data.today_behaviors || 0}</div>
+                        <div class="stat-label">今日行为</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('加载统计信息失败:', error);
+                statsGrid.innerHTML = `<p style="text-align:center;color:#8d6e63;padding:20px;">加载失败: ${error.message}<br>请检查后端服务是否正常运行</p>`;
+            }
+        }
+
+        // 加载图表
+        async function loadCharts() {
+            const chartsGrid = document.getElementById('chartsGrid');
+            try {
+                console.log('正在加载图表数据...');
+                const [behaviorRes, roleRes] = await Promise.all([
+                    fetch(`${API_BASE}/stats/behaviors`),
+                    fetch(`${API_BASE}/stats/roles`)
+                ]);
+                
+                if (!behaviorRes.ok || !roleRes.ok) {
+                    throw new Error(`HTTP error! behavior: ${behaviorRes.status}, roles: ${roleRes.status}`);
+                }
+                
+                const behaviorStats = await behaviorRes.json();
+                const roleStats = await roleRes.json();
+                console.log('图表数据:', { behaviorStats, roleStats });
+                
+                // 行为类型分布
+                const typeTotal = behaviorStats.type_distribution.reduce((sum, t) => sum + t.count, 0);
+                const selfPercent = typeTotal > 0 ? (behaviorStats.type_distribution.find(t => t.type === 'self_act')?.count || 0) / typeTotal * 100 : 0;
+                const dialogPercent = typeTotal > 0 ? (behaviorStats.type_distribution.find(t => t.type === 'dialog_act')?.count || 0) / typeTotal * 100 : 0;
+
+                // 阵营分布HTML
+                const campIcons = {
+                    '古风江湖': { icon: '⚔️', class: 'ancient' },
+                    '现代都市': { icon: '🏢', class: 'modern' },
+                    '奇幻世界': { icon: '✨', class: 'fantasy' },
+                    '历史': { icon: '📜', class: 'history' }
+                };
+
+                const campHTML = roleStats.camp_distribution.map(camp => {
+                    const iconInfo = campIcons[camp.camp] || { icon: '●', class: 'ancient' };
+                    return `
+                        <div class="camp-item">
+                            <div class="camp-icon ${iconInfo.class}">${iconInfo.icon}</div>
+                            <div class="camp-info">
+                                <div class="camp-name">${camp.camp}</div>
+                                <div class="camp-count">${camp.count}人</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // 趋势图表HTML
+                const maxTrend = Math.max(...behaviorStats.weekly_trend.map(t => t.count), 1);
+                const trendHTML = behaviorStats.weekly_trend.map(t => {
+                    const height = (t.count / maxTrend) * 100;
+                    return `
+                        <div class="trend-bar-wrapper">
+                            <div class="trend-value">${t.count}</div>
+                            <div class="trend-bar-container">
+                                <div class="trend-bar" style="height: ${height}%"></div>
+                            </div>
+                            <div class="trend-date">${t.date}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                chartsGrid.innerHTML = `
+                    <div class="chart-card">
+                        <h3 class="chart-title">
+                            <span class="icon">📊</span>
+                            行为类型分布
+                        </h3>
+                        <div class="type-bars">
+                            <div class="type-bar-item">
+                                <div class="type-bar-label">
+                                    <span>自主行为</span>
+                                    <span>${behaviorStats.type_distribution.find(t => t.type === 'self_act')?.count || 0} (${selfPercent.toFixed(1)}%)</span>
+                                </div>
+                                <div class="type-bar-bg">
+                                    <div class="type-bar-fill self" style="width: ${selfPercent}%"></div>
+                                </div>
+                            </div>
+                            <div class="type-bar-item">
+                                <div class="type-bar-label">
+                                    <span>交互行为</span>
+                                    <span>${behaviorStats.type_distribution.find(t => t.type === 'dialog_act')?.count || 0} (${dialogPercent.toFixed(1)}%)</span>
+                                </div>
+                                <div class="type-bar-bg">
+                                    <div class="type-bar-fill dialog" style="width: ${dialogPercent}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3 class="chart-title">
+                            <span class="icon">🏰</span>
+                            阵营分布
+                        </h3>
+                        <div class="camp-grid">
+                            ${campHTML}
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3 class="chart-title">
+                            <span class="icon">📈</span>
+                            近7天趋势
+                        </h3>
+                        <div class="trend-chart">
+                            ${trendHTML}
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('加载图表失败:', error);
+                chartsGrid.innerHTML = `<p style="text-align:center;color:#8d6e63;padding:20px;">图表加载失败: ${error.message}</p>`;
+            }
+        }
+
+        // 加载角色列表
+        async function loadRoles(camp = 'all') {
+            const rolesGrid = document.getElementById('rolesGrid');
+            try {
+                console.log('正在加载角色列表...');
+                let url = `${API_BASE}/roles`;
+                if (camp !== 'all') {
+                    url += `?camp=${encodeURIComponent(camp)}`;
+                }
+                
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const roles = await response.json();
+                console.log('角色数据:', roles);
+                
+                if (roles.length === 0) {
+                    rolesGrid.innerHTML = '<p style="text-align:center;color:#8d6e63;padding:40px;">暂无角色</p>';
+                    return;
+                }
+
+                const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+
+                rolesGrid.innerHTML = roles.map(role => `
+                    <a href="/timelines/${role.role_name}_${today}.html" class="role-card" target="_blank">
+                        <div class="role-header">
+                            <div class="role-avatar">${role.role_name[0]}</div>
+                            <div class="role-info">
+                                <h3>${role.role_name}</h3>
+                                <div class="role-identity">${role.role_identity}</div>
+                                <span class="role-camp">${role.role_camp}</span>
+                            </div>
+                        </div>
+                        <div class="role-personality">${role.role_personality.substring(0, 60)}...</div>
+                        <div class="role-footer">
+                            <span class="role-limit">⚡ 每日${role.daily_act_limit}次</span>
+                            <span class="view-timeline">查看时间线 →</span>
+                        </div>
+                    </a>
+                `).join('');
+            } catch (error) {
+                console.error('加载角色失败:', error);
+                rolesGrid.innerHTML = `<p style="text-align:center;color:#8d6e63;padding:40px;">角色加载失败: ${error.message}</p>`;
+            }
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            // 筛选按钮点击事件
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    loadRoles(this.dataset.camp);
+                });
+            });
+        }
+
+        // 测试API连接
+        async function testAPI() {
+            const debugInfo = document.getElementById('debugInfo');
+            debugInfo.innerHTML = '正在测试API连接...';
+            try {
+                const response = await fetch(`${API_BASE}/stats`);
+                const text = await response.text();
+                debugInfo.innerHTML = `<span style="color: green;">✅ API连接成功!</span><br>状态: ${response.status}<br>响应: ${text.substring(0, 200)}`;
+            } catch (error) {
+                debugInfo.innerHTML = `<span style="color: red;">❌ API连接失败: ${error.message}</span>`;
+            }
+        }
+    </script>
+</body>
+</html>

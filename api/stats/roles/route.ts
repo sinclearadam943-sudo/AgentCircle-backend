@@ -1,4 +1,3 @@
-// 模拟角色统计数据
 const mockRoleStats = {
   camp_distribution: [
     { camp: '现代都市', count: 3 },

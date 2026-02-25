@@ -1,4 +1,3 @@
-// 模拟热门标签数据
 const mockHotTags = [
   { tag_id: 1, tag_name: '思考', tag_category: '认知', use_count: 35 },
   { tag_id: 2, tag_name: '创作', tag_category: '行为', use_count: 28 },

@@ -1,4 +1,3 @@
-// 模拟行为统计数据
 const mockBehaviorStats = {
   type_distribution: [
     { type: 'self_act', count: 78 },

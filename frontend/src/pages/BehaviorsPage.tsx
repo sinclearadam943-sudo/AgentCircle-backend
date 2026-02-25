@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Play, RefreshCw, Clock, MessageCircle, User, FileText, Eye } from 'lucide-react'
-import axios from 'axios'
+import { mockBehaviors, mockRoles } from '../mockData'
 
 interface Behavior {
   act_id: number
@@ -35,12 +35,9 @@ const BehaviorsPage: React.FC<BehaviorsPageProps> = ({ onViewDetail }) => {
 
   const fetchData = async () => {
     try {
-      const [behaviorsRes, rolesRes] = await Promise.all([
-        axios.get('/api/behaviors'),
-        axios.get('/api/roles')
-      ])
-      setBehaviors(behaviorsRes.data)
-      setRoles(rolesRes.data)
+      // 使用模拟数据
+      setBehaviors(mockBehaviors)
+      setRoles(mockRoles)
     } catch (error) {
       console.error('获取数据失败:', error)
     } finally {

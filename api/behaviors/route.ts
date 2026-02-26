@@ -1,28 +1,32 @@
-const mockBehaviors = [
-  {
-    act_id: 1,
-    role_id: 1,
-    act_date: '2026-02-25',
-    act_type: 'self_act',
-    target_role_id: null,
-    act_time: '2026-02-25T10:30:00Z',
-    act_tag: '思考',
-    output_type: 'text',
-    role_name: '云溪'
-  },
-  {
-    act_id: 2,
-    role_id: 2,
-    act_date: '2026-02-25',
-    act_type: 'dialog_act',
-    target_role_id: 1,
-    act_time: '2026-02-25T11:00:00Z',
-    act_tag: '对话',
-    output_type: 'dialog',
-    role_name: '小明'
-  }
-]
+import { supabase } from '../lib/supabase'
 
 export async function GET() {
-  return Response.json(mockBehaviors)
+  try {
+    const { data, error } = await supabase
+      .from('daily_acts')
+      .select(`
+        *,
+        roles!daily_acts_role_id_fkey (
+          role_name
+        )
+      `)
+      .order('act_time', { ascending: false })
+      .limit(50)
+
+    if (error) {
+      console.error('Supabase error:', error)
+      return Response.json({ error: error.message }, { status: 500 })
+    }
+
+    // 格式化数据，把 role_name 移到顶层
+    const formatted = data?.map(item => ({
+      ...item,
+      role_name: item.roles?.role_name
+    })) || []
+
+    return Response.json(formatted)
+  } catch (err) {
+    console.error('Unexpected error:', err)
+    return Response.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

@@ -1,18 +1,41 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.SUPABASE_URL!
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY!
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey)
-
-// 模拟数据
-const mockStats = {
-  total_roles: 5,
-  total_behaviors: 128,
-  total_memories: 256,
-  today_behaviors: 12
-}
+import { supabase } from '../lib/supabase'
 
 export async function GET() {
-  return Response.json(mockStats)
+  try {
+    // 获取角色总数
+    const { count: totalRoles, error: rolesError } = await supabase
+      .from('roles')
+      .select('*', { count: 'exact', head: true })
+
+    // 获取行为总数
+    const { count: totalBehaviors, error: behaviorsError } = await supabase
+      .from('daily_acts')
+      .select('*', { count: 'exact', head: true })
+
+    // 获取记忆总数
+    const { count: totalMemories, error: memoriesError } = await supabase
+      .from('role_memories')
+      .select('*', { count: 'exact', head: true })
+
+    // 获取今日行为数
+    const today = new Date().toISOString().split('T')[0]
+    const { count: todayBehaviors, error: todayError } = await supabase
+      .from('daily_acts')
+      .select('*', { count: 'exact', head: true })
+      .eq('act_date', today)
+
+    if (rolesError || behaviorsError || memoriesError || todayError) {
+      console.error('Supabase errors:', { rolesError, behaviorsError, memoriesError, todayError })
+    }
+
+    return Response.json({
+      total_roles: totalRoles || 0,
+      total_behaviors: totalBehaviors || 0,
+      total_memories: totalMemories || 0,
+      today_behaviors: todayBehaviors || 0
+    })
+  } catch (err) {
+    console.error('Unexpected error:', err)
+    return Response.json({ error: 'Internal server error' }, { status: 500 })
+  }
 }

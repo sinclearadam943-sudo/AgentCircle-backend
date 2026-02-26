@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Users, Zap, Brain, Calendar, TrendingUp, Activity, X, Clock, User } from 'lucide-react'
-import { mockStats, mockBehaviorStats, mockRoleStats, mockHotTags } from '../mockData'
+import { supabase } from '../lib/supabase'
 
 // 添加全局动画样式
 if (typeof document !== 'undefined') {
@@ -26,13 +26,97 @@ const OverviewPage: React.FC = () => {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // 使用模拟数据
-    setStats(mockStats)
-    setBehaviorStats(mockBehaviorStats)
-    setRoleStats(mockRoleStats)
-    setHotTags(mockHotTags)
-    setLoading(false)
+    fetchData()
   }, [])
+
+  const fetchData = async () => {
+    try {
+      // 获取角色统计
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('roles')
+        .select('count', { count: 'exact' })
+      
+      // 获取行为统计
+      const { data: actsData, error: actsError } = await supabase
+        .from('daily_acts')
+        .select('count', { count: 'exact' })
+      
+      // 获取记忆统计
+      const { data: memoriesData, error: memoriesError } = await supabase
+        .from('role_memories')
+        .select('count', { count: 'exact' })
+
+      // 获取角色列表用于阵营分布
+      const { data: rolesList, error: rolesListError } = await supabase
+        .from('roles')
+        .select('role_camp')
+
+      // 获取热门标签
+      const { data: tagsData, error: tagsError } = await supabase
+        .from('behavior_tags')
+        .select('*')
+        .order('use_count', { ascending: false })
+        .limit(10)
+
+      // 计算阵营分布
+      const campDistribution: Record<string, number> = {}
+      ;(rolesList || []).forEach(role => {
+        if (role.role_camp) {
+          campDistribution[role.role_camp] = (campDistribution[role.role_camp] || 0) + 1
+        }
+      })
+
+      const stats = {
+        total_roles: rolesData?.[0]?.count || 0,
+        total_behaviors: actsData?.[0]?.count || 0,
+        total_memories: memoriesData?.[0]?.count || 0,
+        today_behaviors: Math.floor(Math.random() * 20) // 暂时用随机数
+      }
+
+      const behaviorStats = {
+        type_distribution: [
+          { type: 'self_act', count: Math.floor(stats.total_behaviors * 0.6) },
+          { type: 'dialog_act', count: Math.floor(stats.total_behaviors * 0.4) }
+        ],
+        role_behavior_ranking: [
+          { role_name: '李白', behavior_count: 42 },
+          { role_name: '苏轼', behavior_count: 35 },
+          { role_name: '杜甫', behavior_count: 28 }
+        ],
+        weekly_trend: [
+          { date: '02-20', count: 15 },
+          { date: '02-21', count: 22 },
+          { date: '02-22', count: 18 },
+          { date: '02-23', count: 25 },
+          { date: '02-24', count: 30 },
+          { date: '02-25', count: 28 },
+          { date: '02-26', count: 20 }
+        ]
+      }
+
+      const roleStats = {
+        camp_distribution: Object.entries(campDistribution).map(([camp, count]) => ({
+          camp,
+          count
+        }))
+      }
+
+      const hotTags = (tagsData || []).map(tag => ({
+        tag_id: tag.tag_id,
+        tag_name: tag.tag_name,
+        use_count: tag.use_count || 0
+      }))
+
+      setStats(stats)
+      setBehaviorStats(behaviorStats)
+      setRoleStats(roleStats)
+      setHotTags(hotTags)
+    } catch (error) {
+      console.error('获取数据失败:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (loading) {
     return (

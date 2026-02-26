@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Play, RefreshCw, Clock, MessageCircle, User, FileText, Eye } from 'lucide-react'
-import { mockBehaviors, mockRoles } from '../mockData'
+import { supabase } from '../lib/supabase'
 
 interface Behavior {
   act_id: number
@@ -35,9 +35,27 @@ const BehaviorsPage: React.FC<BehaviorsPageProps> = ({ onViewDetail }) => {
 
   const fetchData = async () => {
     try {
-      // 使用模拟数据
-      setBehaviors(mockBehaviors)
-      setRoles(mockRoles)
+      // 从 Supabase 获取真实数据
+      const [behaviorsResult, rolesResult] = await Promise.all([
+        supabase
+          .from('daily_acts')
+          .select('*')
+          .order('act_time', { ascending: false })
+          .limit(50),
+        supabase
+          .from('roles')
+          .select('role_id, role_name')
+      ])
+
+      if (behaviorsResult.error) {
+        console.error('获取行为失败:', behaviorsResult.error)
+      }
+      if (rolesResult.error) {
+        console.error('获取角色失败:', rolesResult.error)
+      }
+
+      setBehaviors(behaviorsResult.data || [])
+      setRoles(rolesResult.data || [])
     } catch (error) {
       console.error('获取数据失败:', error)
     } finally {

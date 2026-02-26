@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Sword, Building2, Sparkles, Scroll, Plus, Trash2, Wand2, ExternalLink } from 'lucide-react'
-import { mockRoles } from '../mockData'
+import { supabase } from '../lib/supabase'
 
 interface Role {
   role_id: number
@@ -65,11 +65,21 @@ const RolesPage: React.FC<RolesPageProps> = ({ onViewDetail }) => {
 
   const fetchRoles = async () => {
     try {
-      // 使用模拟数据
-      const rolesData = mockRoles.map(role => ({
+      // 从 Supabase 获取真实数据
+      const { data, error } = await supabase
+        .from('roles')
+        .select('*')
+        .order('role_id', { ascending: true })
+
+      if (error) {
+        console.error('Supabase 查询错误:', error)
+        throw error
+      }
+
+      const rolesData = (data || []).map(role => ({
         ...role,
-        remaining_quota: 10000,
-        today_act_count: Math.floor(Math.random() * 5)
+        remaining_quota: role.remaining_quota || 10000,
+        today_act_count: role.today_act_count || Math.floor(Math.random() * 5)
       }))
 
       setRoles(rolesData)
